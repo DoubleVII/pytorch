@@ -7468,12 +7468,12 @@ class TestTorchDeviceType(TestCase):
 
                 # generic square matrix case
                 for sample_norm in sample_norms:
-                    identity = torch.eye(n[-2], n[1], dtype=dtype, device=device).expand(n)
                     # stabilize + improve condition number
-                    q = torch.randn(n, dtype=dtype, device=device) + identity
-                    q = normalize_to_1_operator_norm(q, 1.0)
+                    q = torch.randn(n, dtype=dtype, device=device)
+                    u, _, v = torch.svd(q)
+                    q = torch.matmul(u, v.transpose(-2, -1))
                     qinv = torch.inverse(q)
-                    d = torch.ones(n[-1], dtype=dtype, device=device).abs()
+                    d = torch.randn(n[-1], dtype=dtype, device=device).abs()
                     x = q @ torch.diag(d) @ qinv
                     x_norm, _ = x.abs().sum(-2).max(-1)
                     x = normalize_to_1_operator_norm(x, sample_norm)
@@ -7500,12 +7500,12 @@ class TestTorchDeviceType(TestCase):
                     self.assertEqual(mexp, mexp_svd, atol=1e-3, rtol=0)
 
                 # generic square matrix case
-                identity = torch.eye(n[-2], n[1], dtype=dtype, device=device).expand(n)
                 # stabilize + improve condition number
-                q = torch.randn(n, dtype=dtype, device=device) + identity
-                q = normalize_to_1_operator_norm(q, 1.0)
+                q = torch.randn(n, dtype=dtype, device=device)
+                u, _, v = torch.svd(q)
+                q = torch.matmul(u, v.transpose(-2, -1))
                 qinv = torch.inverse(q)
-                d = torch.ones(n[:-1], dtype=dtype, device=device).abs()
+                d = torch.randn(n[:-1], dtype=dtype, device=device).abs()
                 x = torch.matmul(q, torch.matmul(torch.diag_embed(d), qinv))
 
                 mexp = torch.matrix_exp(x)
